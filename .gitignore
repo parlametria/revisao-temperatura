@@ -1,0 +1,24 @@
+# Gerais:
+burocracia
+docs
+queries
+analises/.ipynb_checkpoints
+
+# Códigos de outros projetos:
+codes
+!codes/leggoR/R/config/
+!codes/rcongresso/R/config/
+
+# Dados obsoletos:
+eventos_identificados_em_tramitacoes_camara_desde_2011-01-01.csv
+eventos_identificados_em_tramitacoes_camara_desde_2011-01-01_regex_2020-12-31.csv
+eventos_identificados_em_tramitacoes_camara_desde_2011-01-01_regex_2021-01-14.csv
+eventos_identificados_em_tramitacoes_camara_desde_2011-01-01_regex_2021-01-22.csv
+eventos_identificados_em_tramitacoes_camara_desde_2011-01-01_regex_2021-02-02.csv
+eventos_identificados_em_tramitacoes_camara_desde_2011-01-01_regex_2021-02-16.csv
+
+# Dados desnecessários:
+dados/proposicoes_processadas_2011_2021_part01.zip
+dados/leggo_data_07_12_2020_04_30_02
+dados/proposicoes_processadas_2011_2021_part01/hists_temperatura.csv
+dados/proposicoes_processadas_2011_2021_part01/interesses.csv

@@ -1,0 +1,7 @@
+numpy
+matplotlib
+pandas
+termcolor
+networkx
+google-cloud-storage
+nltk

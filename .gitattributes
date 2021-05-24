@@ -1,0 +1,4 @@
+dados/*.csv filter=lfs diff=lfs merge=lfs -text
+dados/proposicoes_processadas_2011_2021_part01/proposicoes.csv filter=lfs diff=lfs merge=lfs -text
+dados/proposicoes_processadas_2011_2021_part01/proposicoes_nao_capturadas.csv filter=lfs diff=lfs merge=lfs -text
+dados/proposicoes_processadas_2011_2021_part01/trams.csv filter=lfs diff=lfs merge=lfs -text
