@@ -1,14 +1,14 @@
-import numpy as np
+#import numpy as np
 import pandas as pd
-from google.cloud import storage
-import datetime as dt
-import matplotlib.pyplot as pl
-import sys
-import os
-import csv
-import nltk
-import re
-import json
+#from google.cloud import storage
+#import datetime as dt
+#import matplotlib.pyplot as pl
+#import sys
+#import os
+#import csv
+#import nltk
+#import re
+#import json
 
 
 ### System functions ###
@@ -153,15 +153,16 @@ def pick_representative(elements_list, priority_dict):
     return sorted_cand[0]
 
 
-def same_as_previous_entry(df, include_first=False):
+def same_as_previous_entry(df, include_first=False, shift=1):
     """
     Given a DataFrame `df`, return a boolean Series
-    specifying if each entry is the same as the previous
-    one. If `include_first` is True, set the first entry 
+    specifying if each entry is the same as the shifted 
+    one by `shift` (if `shift=1`, it is the previous one). 
+    If `include_first` is True, set the first entry 
     (for which there is no previous one) to True.
     """
     
-    result = (df == df.shift()).product(axis=1).astype(bool)
+    result = (df == df.shift(shift)).product(axis=1).astype(bool)
     if include_first:
         result.iloc[0] = True
     return result
@@ -418,18 +419,43 @@ def mass_replace(string_list, orig, new):
 
 def aggregate_strings(df, group_col, text_col, sep='\n\n'):
     """
-    Group DataFrame `df` by columns group_col (list or str)
-    and concatenate strings in column `text_col` (str) using
-    separator `sep` (str). Return a Series whose index is
+    Group DataFrame `df` by columns `group_col` (list or str)
+    and concatenate strings in column `text_col` (str) using 
+    separator `sep` (str). Return a Series whose index is 
     given by `group_col`.
     """
-    
+
     agg_series = df.loc[~df[text_col].isnull()].groupby(group_col)[text_col].agg(lambda x: sep.join(x))
-    
+        
     return agg_series
 
         
 ### String processing functions ###
+
+
+def replace_bold_unicode(string):
+    """
+    Replace unicode characters that represent bold 
+    characters with normal characters.
+    """
+    
+    # Characters to be replaced:
+    bold_sans    = list('𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵')
+    bold_serif   = list('𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐬𝐫𝐭𝐮𝐯𝐰𝐱𝐲𝐳𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗')
+    italic_sans  = list('𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘴𝘳𝘵𝘶𝘷𝘸𝘹𝘺𝘻0123456789')
+    italic_serif = list('𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑠𝑟𝑡𝑢𝑣𝑤𝑥𝑦𝑧0123456789')
+    both_sans    = list('𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙨𝙧𝙩𝙪𝙫𝙬𝙭𝙮𝙯0123456789')
+    both_serif   = list('𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒔𝒓𝒕𝒖𝒗𝒘𝒙𝒚𝒛0123456789')
+    # Target characters (in the same order):
+    norm_chars    = list('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789')
+
+    charsets = [bold_sans, bold_serif, italic_sans, italic_serif, both_sans, both_serif]
+
+    for charset in charsets:
+        for b, n in zip(charset, norm_chars):
+            string = string.replace(b,n)
+    
+    return string
 
 
 def text2tag(text):
@@ -451,6 +477,11 @@ def remove_accents(string, i=0):
     
     Returns the same string, but without all portuguese-valid accents.
     """
+    
+    # Missing values case:
+    if type(string) == type(np.NaN):
+        return string
+    
     accent_list = [('Ç','C'),('Ã','A'),('Á','A'),('À','A'),('Â','A'),('É','E'),('Ê','E'),('Í','I'),('Õ','O'),('Ó','O'),
                    ('Ô','O'),('Ú','U'),('Ü','U'),('ç','c'),('ã','a'),('á','a'),('à','a'),('â','a'),('é','e'),('ê','e'),
                    ('í','i'),('õ','o'),('ó','o'),('ô','o'),('ú','u'),('ü','u'),('È','E'),('Ö','O'),('Ñ','N'),('è','e'),
@@ -462,7 +493,12 @@ def remove_accents(string, i=0):
         return remove_accents(string, i + 1)
 
 def remove_punctuation(text):
-    return text.translate(str.maketrans('', '', '“!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'))
+
+    # For missing values:
+    if type(text) == type(np.NaN):
+        return text    
+    
+    return text.translate(str.maketrans('', '', '“”!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'))
 
 def lowercase(text):
     return text.lower()
@@ -576,6 +612,24 @@ def multiple_bars_plot(df, colors=None, alpha=None, width=0.8, rotation=0, horiz
         ax.set_xticks(ind)
         ax.set_xticklabels(rows, rotation=rotation)
 
+
+### Output functions ###
+
+
+def dict_list_2_newline_json(dict_list, filename):
+    """
+    Save a list of dicts `dict_list` as a 
+    newline delimited JSON file `filename` 
+    (str).
+    """
+    
+    # Parse data to a string (newline delimited JSON format):
+    newline_json = '\n'.join([json.dumps(entry, ensure_ascii=False) for entry in dict_list])
+    
+    # Write to file:
+    with open(filename, 'w') as f:
+        f.write(newline_json)
+        
 
 ### Other functions ###
 
